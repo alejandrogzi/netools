@@ -1,0 +1,8 @@
+net chr1 248956422
+ fill 10000 50000 chr2 + 30000 48000 id 1 score 300000 ali 45000 type top
+  gap 20000 5000 chr2 + 40000 4000
+   fill 21000 3000 chr3 - 100 2900 id 2 score 5000 ali 2800 type syn
+  gap 30000 2000 chr2 + 50000 1500
+ fill 90000 10000 chr4 + 5000 9500 id 3 score 12000 ali 9000 type nonSyn foo bar
+net chr2 242193529
+ fill 0 100 chrX + 0 100 id 5 score 100

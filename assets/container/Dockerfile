@@ -1,0 +1,29 @@
+# Minimal container exposing the `netools` CLI.
+#
+# Build from the repository root (the directory containing the `netools/` crate):
+#   docker build -f assets/container/Dockerfile -t netools .
+#
+# Run (mount your data and pass a subcommand):
+#   docker run --rm -v "$PWD:/data" netools stats /data/genome.net
+#   docker run --rm netools --help
+#
+# All dependencies are pure Rust (gzip uses the zlib-rs backend), so no system
+# libraries are needed at build or run time.
+
+# ---- build stage ----------------------------------------------------------
+FROM rust:1-slim-bookworm AS builder
+WORKDIR /src
+COPY netools/ ./
+RUN cargo build --release --features cli
+
+# ---- runtime stage --------------------------------------------------------
+FROM debian:bookworm-slim
+LABEL org.opencontainers.image.title="netools" \
+      org.opencontainers.image.description="work with .net files in Rust" \
+      org.opencontainers.image.licenses="GPL-3.0"
+
+COPY --from=builder /src/target/release/netools /usr/local/bin/netools
+
+RUN 'netools --version'
+
+CMD ["bash"]

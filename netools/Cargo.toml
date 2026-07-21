@@ -1,0 +1,57 @@
+[package]
+name = "netools"
+version = "0.0.1"
+edition = "2024"
+rust-version = "1.85"
+license = "GPL-3.0"
+description = "work with .net files in Rust"
+repository = "https://github.com/alejandrogzi/netools"
+readme = "README.md"
+keywords = ["bioinformatics", "genomics", "ucsc", "net", "alignment"]
+categories = ["science", "command-line-utilities", "parser-implementations"]
+
+[lib]
+name = "netools"
+path = "src/lib.rs"
+
+[[bin]]
+name = "netools"
+path = "src/main.rs"
+required-features = ["cli"]
+
+[features]
+default = ["mmap"]
+
+mmap = ["dep:memmap2"]
+gzip = ["dep:flate2"]
+parallel = ["dep:rayon"]
+index = []
+write = []
+cli = [
+    "dep:clap",
+    "dep:log",
+    "dep:simple_logger",
+    "dep:num_cpus",
+    "parallel",
+    "write",
+    "index",
+    "gzip",
+]
+serde = ["dep:serde"]
+
+[dependencies]
+memchr = "2"
+memmap2 = { version = "0.9", optional = true }
+rayon = { version = "1", optional = true }
+flate2 = { version = "1", optional = true, default-features = false, features = ["zlib-rs"] }
+clap = { version = "4", features = ["derive"], optional = true }
+log = { version = "0.4", optional = true }
+simple_logger = { version = "5", optional = true, features = ["stderr"] }
+num_cpus = { version = "1", optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
+
+[profile.release]
+lto = true
+opt-level = 3
+codegen-units = 1
+strip = true

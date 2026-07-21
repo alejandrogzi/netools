@@ -11,10 +11,12 @@
 # libraries are needed at build or run time.
 
 # ---- build stage ----------------------------------------------------------
-FROM rust:1-slim-bookworm AS builder
+FROM rust:1.93.0-slim-bookworm AS builder
 WORKDIR /src
 COPY netools/ ./
-RUN cargo build --release --features cli
+
+RUN cargo build --release --all-features --bin netools --locked && \
+    strip target/release/netools
 
 # ---- runtime stage --------------------------------------------------------
 FROM debian:bookworm-slim
@@ -22,8 +24,16 @@ LABEL org.opencontainers.image.title="netools" \
       org.opencontainers.image.description="work with .net files in Rust" \
       org.opencontainers.image.licenses="GPL-3.0"
 
-COPY --from=builder /src/target/release/netools /usr/local/bin/netools
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN 'netools --version'
+COPY --from=builder /src/target/release/netools /usr/local/bin/netools
+RUN chmod +x /usr/local/bin/netools
+ENV PATH="/usr/local/bin:${PATH}"
+
+RUN netools --version
 
 CMD ["bash"]

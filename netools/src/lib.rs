@@ -43,6 +43,9 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 pub mod algorithms;
+#[cfg(feature = "chainnet")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chainnet")))]
+pub mod chainnet;
 pub mod io;
 pub mod model;
 pub mod parser;

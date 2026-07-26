@@ -7,6 +7,112 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.0.2] — 2026-07-26
+
+This release adds the first chain-to-NET construction path: a library
+builder and CLI subcommand that generate UCSC alignment NETs directly from
+score-sorted chain records, replacing the Perl `chainNet` + `NetFilterNonNested`
+pipeline. It also tightens the CLI interface for `merge` and `split`, and
+fixes several Docker build issues.
+
+### Added
+
+- **`chainnet` feature: chain-driven NET construction** — A new
+  `ChainNetBuilder` constructs reference and query NETs from score-descending
+  chains without serialising or reparsing an intermediate raw NET. The builder
+  is order-sensitive within a chromosome (matching Kent's expectations) and
+  parallelises only across independent chromosomes. Query-minus chains are
+  projected into forward query coordinates without mutating the parsed chain
+  records. A `chaincleaner_compatible()` preset fuses raw construction with the
+  exact non-nested `minScore1=3000` transformation that the Perl pipeline
+  applies as a separate step.
+
+- **`NonNestedFilter` and `filter_non_nested`** — A public library function
+  that applies the exact descendant-promotion semantics of
+  `NetFilterNonNested.perl -minScore1` to any finalised `OwnedNet`. When a fill
+  is rejected, its direct gap and that gap's child fills are promoted to the
+  rejected fill's output parent, reproducing the Kent behaviour without an
+  external Perl invocation.
+
+- **`SizeSource::TwoBit`** — Sequence sizes can now be read from a `.2bit`
+  genome index via the `twobit` crate, removing the need for a separate
+  `chrom.sizes` file when a 2bit index is already available alongside the
+  chain input.
+
+- **`netools net` CLI subcommand** — A new `net` subcommand reads
+  score-sorted chains from a file or stdin and writes reference and/or query
+  NETs. It accepts `--chain`, `--reference-sizes` / `--reference-2bit`, and
+  `--query-sizes` / `--query-2bit`. The `--preset ccr` flag selects exact
+  `chainCleaner`-compatible generation (reference-only, `minScore=0` during
+  construction, then `minScore1=3000` post-filter). Diagnostic
+  `--raw-net-out` and `--raw-query-net-out` flags emit the pre-post-filter
+  arena for inspection.
+
+- **Merge input via `--nets` and `--file`** — `netools merge` now accepts
+  `--nets` for comma-separated paths and `--file` for a plain-text list of
+  NET paths (one per line). Positional arguments are rejected to prevent
+  accidental argument-order mistakes.
+
+- **Split input via `--net`** — `netools split` now requires `--net` for the
+  input path. When `--net` is omitted, input is read from stdin. Positional
+  arguments are rejected for interface uniformity across subcommands.
+
+- **Thread count passthrough for `net` construction** — The CLI context
+  struct carries an explicit `threads: Option<usize>` field. Chain-to-NET
+  construction now respects the global `--threads` flag for chromosome-level
+  parallelism, and serial mode (`--threads 1`) is honoured throughout.
+
+- **Benchmarks against Kent `chainNet`** — The README now includes a
+  benchmark comparison of Rust `chainNet`-style NET construction against the
+  Kent `chainNet` binary and the `chainNet + NetFilterNonNested.perl` pipeline
+  on hg38↔rhiRex1 whole-genome chains (3,049,608 chains, 608 reference
+  sequences, 91 query sequences). The Rust reference-only 16-thread path
+  achieves 2.54× speedup over Kent `chainNet` alone. The `--preset ccr` path
+  achieves 3.71× over the full Perl pipeline.
+
+- **Chainnet tests** — A new `tests/chainnet.rs` module covers both-side
+  construction, query-minus projection, internal-gap coordinate correctness,
+  non-nested filter descendant promotion, public `filter_non_nested` on
+  standalone `OwnedNet`s, score-order validation, Kent ties-to-even score
+  rounding, metadata preservation and omission after filtering, and parallel
+  determinism across thread counts.
+
+- **Expanded CLI integration tests** — `tests/cli.rs` now tests `merge`
+  input via `--nets` and `--file`, split input via `--net` and stdin, split
+  positional-argument rejection, `net` subcommand chain input via `--chain`
+  and stdin, positional chain input rejection, and old `chain-net` alias
+  removal.
+
+### Changed
+
+- **`cli` feature now implies `chainnet`** — Building with `--features cli`
+  pulls in `chaintools` and `twobit` transitively, so the `net` subcommand is
+  always available in the CLI binary.
+
+- **`gzip` and `parallel` features forward to `chaintools`** — Enabling
+  `gzip` or `parallel` now also enables the corresponding `chaintools`
+  features, ensuring chain parsing and parallel chain reading use consistent
+  compression and thread-pool settings across both crates.
+
+### Dependencies
+
+- Added `chaintools` 0.0.9 (local path dependency) — chain parsing and
+  sequential/parallel reader infrastructure required by the `chainnet` feature.
+- Added `twobit` 0.2.2 — optional 2bit genome index reader for extracting
+  sequence sizes without a separate `chrom.sizes` file.
+
+### Fixed
+
+- **Dockerfile** — Pinned the build stage to `rust:1.93.0-slim-bookworm`
+  instead of the rolling `rust:1-slim-bookworm` tag. Added `ca-certificates`
+  and `procps` to the runtime image. Explicitly set executable permissions on
+  the binary with `chmod +x`. Fixed the `RUN 'netools --version'` quoting
+  issue that caused a shell error by using `RUN netools --version` without
+  quotes. Build now compiles with `--all-features` and `--locked`, and the
+  binary is stripped to reduce image size.
+
+---
+
 ## [0.0.1] — 2026-07-21
 
 ### Added

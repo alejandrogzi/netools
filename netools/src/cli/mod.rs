@@ -8,6 +8,7 @@
 
 pub mod common;
 
+pub mod chain_net;
 pub mod filter;
 pub mod merge;
 pub mod sort;
@@ -53,6 +54,8 @@ pub struct Cli {
 /// Top-level subcommands.
 #[derive(Debug, Subcommand)]
 enum Command {
+    /// Construct reference/query NETs from score-sorted chains.
+    Net(chain_net::Args),
     /// Report structural issues.
     Validate(validate::Args),
     /// Inspect selected records.
@@ -95,9 +98,11 @@ impl Cli {
             parse_mode: self.parse_mode.into(),
             gzip,
             parallel: self.threads != Some(1),
+            threads: self.threads,
         };
 
         match self.command {
+            Command::Net(args) => chain_net::run(args, &ctx),
             Command::Validate(args) => validate::run(args, &ctx),
             Command::View(args) => view::run(args, &ctx),
             Command::Stats(args) => stats::run(args, &ctx),

@@ -94,6 +94,8 @@ pub struct Ctx {
     pub gzip: Option<bool>,
     /// Whether to parse in parallel.
     pub parallel: bool,
+    /// Requested worker count (`None` or zero means automatic).
+    pub threads: Option<usize>,
 }
 
 /// Read a reader from a path or stdin (`-`).

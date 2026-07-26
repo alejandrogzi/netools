@@ -4,6 +4,7 @@
 //! `netools merge` — combine complete NET files.
 
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::ValueEnum;
@@ -28,9 +29,24 @@ pub enum DuplicatePolicy {
 /// Merge several NET files.
 #[derive(Debug, clap::Args)]
 pub struct Args {
-    /// Input files (`-` for stdin).
-    #[arg(required = true)]
-    pub inputs: Vec<String>,
+    /// Comma-separated input NET files.
+    #[arg(
+        long,
+        value_name = "PATH,...",
+        value_delimiter = ',',
+        num_args = 1,
+        required_unless_present = "file",
+        conflicts_with = "file"
+    )]
+    pub nets: Vec<String>,
+    /// File containing one input NET path per line.
+    #[arg(
+        long,
+        value_name = "PATH",
+        required_unless_present = "nets",
+        conflicts_with = "nets"
+    )]
+    pub file: Option<PathBuf>,
     /// Output file (`-` for stdout).
     #[arg(long, short, default_value = "-")]
     pub output: String,
@@ -43,9 +59,10 @@ pub struct Args {
 }
 
 pub fn run(args: Args, ctx: &Ctx) -> CliResult<ExitCode> {
+    let inputs = resolve_inputs(&args)?;
+
     // Keep every reader alive so borrowed sections remain valid.
-    let readers: Vec<Reader> = args
-        .inputs
+    let readers: Vec<Reader> = inputs
         .iter()
         .map(|path| read_input(path, ctx))
         .collect::<crate::Result<Vec<_>>>()?;
@@ -103,4 +120,25 @@ pub fn run(args: Args, ctx: &Ctx) -> CliResult<ExitCode> {
     }
     out.finish()?;
     Ok(ExitCode::SUCCESS)
+}
+
+fn resolve_inputs(args: &Args) -> CliResult<Vec<String>> {
+    if !args.nets.is_empty() {
+        return Ok(args.nets.clone());
+    }
+
+    let list_path = args
+        .file
+        .as_ref()
+        .ok_or("either --nets or --file is required")?;
+    let inputs: Vec<String> = std::fs::read_to_string(list_path)?
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .map(str::to_owned)
+        .collect();
+    if inputs.is_empty() {
+        return Err(format!("input list `{}` contains no NET paths", list_path.display()).into());
+    }
+    Ok(inputs)
 }

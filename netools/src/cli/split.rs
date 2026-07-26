@@ -14,8 +14,9 @@ use crate::cli::common::{CliResult, Ctx, Output, read_input, sanitize_filename};
 /// Split a NET file into one file per section.
 #[derive(Debug, clap::Args)]
 pub struct Args {
-    /// Input file (`-` for stdin).
-    pub input: String,
+    /// Input NET file. Omit to read from stdin.
+    #[arg(long, value_name = "PATH")]
+    pub net: Option<String>,
     /// Output directory.
     #[arg(long, default_value = "split")]
     pub out_dir: String,
@@ -31,7 +32,7 @@ pub struct Args {
 }
 
 pub fn run(args: Args, ctx: &Ctx) -> CliResult<ExitCode> {
-    let reader = read_input(&args.input, ctx)?;
+    let reader = read_input(args.net.as_deref().unwrap_or("-"), ctx)?;
     std::fs::create_dir_all(&args.out_dir)?;
 
     let suffix = if args.gzip && !args.suffix.ends_with(".gz") {

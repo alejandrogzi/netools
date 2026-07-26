@@ -1,11 +1,15 @@
 **/work/
 **/results/
 CLAUDE.md
+INSTRUCTIONS.md
+netools/benchmarks/RESULTS.md
 
 # Artifacts
 docs/decisions.md
 .claude/
 src/test.json
+*.chain.gz
+*.chain
 
 # Rust build artifacts
 **/target/

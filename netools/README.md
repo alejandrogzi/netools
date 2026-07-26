@@ -54,8 +54,9 @@ cargo build --release --features cli
 | `parallel` |         | section-parallel parsing/writing (`rayon`)           |
 | `index`    |         | section / chain-id / reference-interval indexes      |
 | `write`    |         | canonical writer, `Display`, `to_net_string`         |
+| `chainnet` |         | chain-driven NET construction (`chaintools`, `twobit`) |
 | `serde`    |         | `serde` derives on small model types                 |
-| `cli`      |         | the `netools` binary (implies `parallel write index gzip`) |
+| `cli`      |         | the `netools` binary (implies `chainnet parallel write index gzip`) |
 
 Core sequential parsing and streaming depend only on `std`.
 
@@ -196,10 +197,38 @@ Also: `fill_contexts`, `chain_occurrences`, `adjacent_chain_occurrences`,
 `alignment_span_index()` whose `any_overlap_where(range, rank_fn)` keeps chain
 ranking in the caller's hands.
 
+## Constructing NETs from chains (`chainnet` feature)
+
+`ChainNetBuilder` constructs reference and query NETs directly from
+score-descending chains. It preserves equal-score input order, handles
+query-minus projection in forward query coordinates, and parallelises only
+across independent chromosomes. The cleaner-compatible preset fuses raw NET
+construction with the exact non-nested `minScore1=3000` transformation:
+
+```rust,ignore
+use chaintools::{Chain, Reader};
+use netools::chainnet::{ChainNetBuilder, ChainNetOptions, SizeSource};
+
+let chains = Reader::<Chain>::from_path("input.chain")?;
+let generated = ChainNetBuilder::new(ChainNetOptions::chaincleaner_compatible())
+    .reference_sizes(SizeSource::TwoBit("reference.2bit".into()))
+    .query_sizes(SizeSource::TwoBit("query.2bit".into()))
+    .build(&chains)?;
+
+for net in generated.reference_nets() {
+    consume(net.as_ref());
+}
+```
+
+This path constructs only the reference side, performs score filtering after
+the complete hierarchy exists, promotes valid descendants of rejected fills,
+and does not serialize or reparse an intermediate raw NET.
+
+
 ## CLI
 
 ```text
-netools <validate|view|stats|split|sort|filter|merge> [OPTIONS]
+netools <net|validate|view|stats|split|sort|filter|merge> [OPTIONS]
 ```
 
 Global flags: `--threads`, `--log-level`, `--parse-mode`, `--gzip`/`--no-gzip`.
@@ -211,8 +240,19 @@ netools validate --mode strict input.net
 netools view --reference chr1 --max-depth 3 input.net
 netools filter --kind fill --min-score 3000 --type syn,inv --tree-policy prune in.net -o out.net
 netools sort --nets natural --records reference in.net -o out.net
-netools split input.net --out-dir split --manifest split/manifest.tsv
-netools merge a.net b.net --duplicates error -o merged.net
+netools split --net input.net --out-dir split --manifest split/manifest.tsv
+netools merge --nets a.net,b.net --duplicates error -o merged.net
+netools merge --file nets.list --duplicates error -o merged.net
+netools net --chain input.chain \
+  --reference-sizes reference.chrom.sizes \
+  --query-sizes query.chrom.sizes \
+  --reference-net reference.net \
+  --query-net query.net
+netools net --chain input.chain \
+  --reference-2bit reference.2bit \
+  --query-2bit query.2bit \
+  --reference-net cleaner.net \
+  --preset ccr
 ```
 
 Tree-aware filter policies are explicit: `prune` (drop failing subtrees,

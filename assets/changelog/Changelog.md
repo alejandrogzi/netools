@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.0.3] — 2026-08-14
+
+### Changed
+
+- **Bumped `chaintools` to 0.0.12** — The `chainnet` feature now depends on
+  `chaintools` 0.0.12, picking up the upstream chain-parsing and reader
+  improvements since 0.0.9. The dependency bump is breaking for downstream
+  crates that still target the 0.0.9 API.
+
+### Dependencies
+
+- Updated `chaintools` from 0.0.9 to 0.0.12.
+
+---
+
 ## [0.0.2] — 2026-07-26
 
 This release adds the first chain-to-NET construction path: a library

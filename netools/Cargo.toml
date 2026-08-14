@@ -1,6 +1,6 @@
 [package]
 name = "netools"
-version = "0.0.2"
+version = "0.0.3"
 edition = "2024"
 rust-version = "1.85"
 license = "GPL-3.0"
@@ -51,7 +51,7 @@ log = { version = "0.4", optional = true }
 simple_logger = { version = "5", optional = true, features = ["stderr"] }
 num_cpus = { version = "1", optional = true }
 serde = { version = "1", features = ["derive"], optional = true }
-chaintools = { version = "0.0.9", optional = true }
+chaintools = { version = "0.0.12", optional = true }
 twobit = { version = "0.2.2", optional = true }
 
 [profile.release]

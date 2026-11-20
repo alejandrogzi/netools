@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.0.4] — 2026-11-20
+
+### Changed
+
+- **Bumped `chaintools` to 0.0.14** — The `chainnet` feature now depends on
+  `chaintools` 0.0.14, so downstream crates can pass a 0.0.14 `Reader` to
+  `ChainNetBuilder::build` and use its one-pass 2bit loader, which reads
+  version 1 files (64-bit offsets, `faToTwoBit -long`) for genomes above 4 Gb.
+  The dependency bump is breaking for downstream crates that still target the
+  0.0.12 API. No source change was needed.
+
+### Dependencies
+
+- Updated `chaintools` from 0.0.12 to 0.0.14.
+
+---
+
 ## [0.0.3] — 2026-08-14
 
 ### Changed

@@ -59,12 +59,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "chaintools"
-version = "0.0.12"
+name = "cfg-if"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "209046c222a8f336acffed2def818b8fd818b75eb8b1b654667d0f129008c86f"
+checksum = "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600"
+
+[[package]]
+name = "chaintools"
+version = "0.0.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fdd0f81462190ad9a893fdbcd99cf9dbaa0865883ae4d974c22d1c0c0edd1031"
 dependencies = [
  "flate2",
+ "genepred",
  "memchr",
  "memmap2",
  "rayon",
@@ -126,6 +133,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "crc32fast"
+version = "1.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b929dd2a135771f40afabd1073f85eed59c800b7c61901e5c254270497dad64"
+dependencies = [
+ "cfg-if",
+]
+
+[[package]]
 name = "crossbeam-deque"
 version = "0.8.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -168,8 +184,19 @@ version = "1.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "843fba2746e448b37e26a819579957415c8cef339bf08564fe8b7ddbd959573c"
 dependencies = [
+ "crc32fast",
  "miniz_oxide",
  "zlib-rs",
+]
+
+[[package]]
+name = "genepred"
+version = "0.0.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d325e72bfd34cbe1676162128478838842807898aafb794fd3c822697d887f4"
+dependencies = [
+ "flate2",
+ "memchr",
 ]
 
 [[package]]
@@ -229,7 +256,7 @@ dependencies = [
 
 [[package]]
 name = "netools"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "chaintools",
  "clap",
